@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Graph Creator</title>
+</head>
+<body>
+	<style type="text/css">
+		
+	canvas {
+  		border: 1px solid black;
+  		background: white;
+	}
+
+	html{
+		background: lightgrey;
+	}
+
+	.get_input{
+		height: 30px;
+	}
+	</style>
+
+<div class="main">
+
+	<h1>Graph</h1>
+	<div id="input_graph">
+
+		<div class="get_input">	
+			<ul>
+				<span style="display: inline;">
+				  <label for="starting_points_text">Starting Points:</label>
+				  <input id="starting_points_text" type="text" size="5" value="15"/>
+
+				  <label for="min_max_change_text">Change Rate:</label>
+				  <input id="min_max_change_text" type="text" size="5" value="5"/>
+
+				  <input onclick="createGraphClicked()" type="button" value="Create Graph"/>
+
+				  <label for="sideYcheckbox">Show Y lines</label>       
+	              <input id="sideYcheckbox" name="SideYcheckbox" type="checkbox" checked/>
+	  
+				</span>
+			</ul>
+
+		</div>
+	</div>
+
+	<div class="main_ui">
+				<p id="new_value_shown">New Value: </p>
+	</div>
+</div>
+
+
+</body>
+
+<script type="text/javascript">
+
+////Creating Canvas
+
+var c = document.createElement("CANVAS");
+var ctx = c.getContext("2d");
+
+
+c.width= window.innerWidth-20;
+c.height=200;
+  
+ document.getElementById('input_graph').appendChild(c); // puts graph in div input_graph
+
+//list of points
+var listOfPoints=[];
+var listOfShownPoints=[];
+var currentPoint=0;
+var newPointToAdd;
+
+//starts interval that adds points
+mainInterval();
+
+function createGraphClicked(){
+	clearCanvas();
+	var numStartingPoints=parseInt(document.getElementById("starting_points_text").value);
+	var numMinMax=parseInt(document.getElementById("min_max_change_text").value);
+	graphStartingPoints(numStartingPoints,numMinMax);
+}	
+
+function graphStartingPoints(numStartingPoints,numMinMax){
+
+	for(i=0; i<numStartingPoints; i++){
+		createNewPoint(numMinMax,numStartingPoints);
+	}
+	graphShownPoints(numStartingPoints);
+}
+
+//create a new random point
+function createNewPoint(numMinMax,listMax){
+	newPointToAdd=currentPoint+getRandomInt((-numMinMax), numMinMax);
+	listOfPoints.push(newPointToAdd);
+	if(listOfShownPoints.length >=listMax){
+		listOfShownPoints.splice(0,1);
+		listOfShownPoints.push(newPointToAdd);
+	}else{listOfShownPoints.push(newPointToAdd);}
+	
+	currentPoint=newPointToAdd;
+}
+
+//creates random integer
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function graphShownPoints(numToShow){
+	
+	let startX = 0;
+	let startY = listOfShownPoints[0];
+	let changeX = c.width/numToShow
+
+	var currentX=startX;
+	var yPlacement;
+	
+	ctx.beginPath();
+	ctx.moveTo(startX,startY)
+
+	//finds range of shown lists
+	var listRange=getRangeOfList();
+
+	for(i=0; i<numToShow; i++){
+		var lSPV=listOfShownPoints[i]; //value of shown point at index
+		var	minNum = Math.min(...listOfShownPoints);
+		yPlacement=(c.height-(c.height*((lSPV-minNum)/listRange)));
+		ctx.lineTo(currentX,yPlacement);
+		currentX+=changeX; 
+	}
+
+	drawValueAtIndex(currentX,yPlacement,numToShow-1,changeX);//shows value of newest point
+	ctx.stroke();
+	drawSideValueY(listRange);
+	updatesNewValueShownP();
+}
+
+//gets the range of a list
+function getRangeOfList(){
+	//find range
+	var maxNum = Math.max(...listOfShownPoints);
+	var	minNum = Math.min(...listOfShownPoints);
+
+	var listRange=(maxNum-minNum);
+
+	return(listRange);
+}
+
+function clearCanvas(){
+	ctx.clearRect(0, 0, c.width, c.height);
+}
+
+function mainInterval() {
+  setInterval(function(){ 
+  	var numStartingPoints=parseInt(document.getElementById("starting_points_text").value);
+	var numMinMax=parseInt(document.getElementById("min_max_change_text").value);
+  	createNewPoint(numStartingPoints, numMinMax);
+  	clearCanvas();
+  	graphShownPoints(numStartingPoints);
+   }, 3000);
+}
+
+
+// shows Side Value of Y
+function drawSideValueY(range){
+
+	var showSideY = document.getElementById('sideYcheckbox');
+
+	//if the checkbox is checked 
+	if(showSideY.checked){
+		let sideValuesShown=5;
+
+		var valueY=Math.min(...listOfShownPoints);
+		let changeValueY = range/sideValuesShown
+
+		var placeY = c.height;
+		let changePlaceY = c.height/sideValuesShown; // finds what to change ycord by
+
+		///drawing part
+
+		// looping for how many side values want shown
+		for(i=0; i< sideValuesShown+1; i++){
+			drawValueAtPoint(valueY,5,placeY);
+			placeY-=changePlaceY;
+			valueY=Math.round(((valueY + changeValueY) * 10)/10);
+
+		}
+	}
+}
+
+function drawValueAtPoint(newValue,x,y){
+	ctx.font = "15px Arial";
+    ctx.fillStyle = "red";
+    ctx.fillText(newValue,x,y);
+}
+
+
+function updatesNewValueShownP(){
+	document.getElementById("new_value_shown").innerHTML = "New Value: "+listOfShownPoints.slice(-1)[0];
+}
+
+function drawValueAtIndex(x,y,index,changeX){
+	ctx.font = "20px Arial";
+    ctx.fillStyle = "red";
+    var value=listOfShownPoints[index];
+    ctx.fillText(value,x-changeX,y);
+
+}
+
+function buyClicked(){
+	console.log(newPointToAdd);
+}
+</script>
+</html>
